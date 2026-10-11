@@ -1,0 +1,95 @@
+.startup-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.startup-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #2563eb;
+  transform: translateY(-2px);
+}
+
+.startup-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: 0.75rem;
+  gap: 1rem;
+}
+
+.startup-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.startup-industry {
+  background: #dbeafe;
+  color: #1e40af;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.startup-tagline {
+  color: #6b7280;
+  font-style: italic;
+  margin: 0 0 0.75rem 0;
+  font-size: 0.95rem;
+}
+
+.startup-description {
+  color: #4b5563;
+  margin: 0 0 1rem 0;
+  line-height: 1.6;
+}
+
+.startup-card-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.startup-funding,
+.startup-founder {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+}
+
+.startup-funding .label,
+.startup-founder .label {
+  color: #6b7280;
+}
+
+.startup-funding .value {
+  font-weight: 600;
+  color: #059669;
+}
+
+.startup-founder .value {
+  font-weight: 500;
+  color: #4b5563;
+}
+
+@media (max-width: 640px) {
+  .startup-card-header {
+    flex-direction: column;
+  }
+  
+  .startup-industry {
+    align-self: flex-start;
+  }
+}

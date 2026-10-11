@@ -1,3 +1,4 @@
+
 import OpenAI from "openai";
 import Startup from "../models/Startup.js";
 
@@ -18,33 +19,59 @@ export const generateStartupPitch = async (req, res) => {
       });
     }
 
+    const fundingINR = `₹${Number(
+      startup.fundingRequired
+    ).toLocaleString("en-IN")}`;
+
     const prompt = `
-      You are a startup pitch advisor.
+You are an experienced startup pitch advisor.
 
-      Generate a concise, professional investor pitch
-      using only the following startup information.
+Create a concise, professional investor pitch using only the
+startup information below.
 
-      Name: ${startup.name}
-      Industry: ${startup.industry}
-      Tagline: ${startup.tagline || "Not provided"}
-      Description: ${startup.description}
-      Funding Required: ${startup.fundingRequired}
-      Location: ${startup.location || "Not provided"}
+STARTUP INFORMATION
+Name: ${startup.name}
+Industry: ${startup.industry}
+Tagline: ${startup.tagline || "Not provided"}
+Description: ${startup.description}
+Funding Required: ${fundingINR} INR
+Location: ${startup.location || "Not provided"}
 
-      Include these sections:
-      1. Problem
-      2. Solution
-      3. Target Market
-      4. Investment Highlights
-      5. Short Investor Pitch
+Use these five sections:
 
-      Do not invent company metrics or financial results.
-    `;
+## 1. Problem
+Explain the problem this startup aims to solve.
+
+## 2. Solution
+Explain how the startup addresses the problem.
+
+## 3. Target Market
+Describe likely customers based on the available information.
+
+## 4. Investment Highlights
+Highlight potential strengths without inventing facts.
+
+## 5. Short Investor Pitch
+Write a concise pitch suitable for introducing the startup to investors.
+
+Rules:
+- Return the actual pitch, not a safety assessment.
+- Do not invent revenue, traction, customer counts, or financial results.
+- Do not invent a use of funds unless the startup information provides it.
+- Express the funding amount in INR; never convert it to USD.
+- Clearly identify missing information when relevant.
+- Use professional English and Markdown headings.
+`;
 
     const response = await ai.chat.completions.create(
       {
         model: "openrouter/free",
         messages: [
+          {
+            role: "system",
+            content:
+              "You are a professional startup pitch advisor. Return the requested pitch only, with all five sections.",
+          },
           {
             role: "user",
             content: prompt,
@@ -56,11 +83,21 @@ export const generateStartupPitch = async (req, res) => {
       }
     );
 
-    const pitch = response.choices[0]?.message?.content;
+    const choice = response.choices?.[0];
+    const pitch = choice?.message?.content?.trim();
 
-    if (!pitch) {
+    console.log("AI model:", response.model);
+    console.log("AI finish reason:", choice?.finish_reason);
+
+    if (
+      !pitch ||
+      pitch.length < 100 ||
+      /user safety:\s*safe/i.test(pitch)
+    ) {
+      console.error("AI returned an invalid or incomplete pitch.");
+
       return res.status(502).json({
-        message: "AI returned an empty response",
+        message: "AI returned an invalid pitch. Please try again.",
       });
     }
 
@@ -76,13 +113,22 @@ export const generateStartupPitch = async (req, res) => {
       error.message
     );
 
-    if (error.name === "TimeoutError" || error.name === "AbortError") {
+    if (
+      error.name === "TimeoutError" ||
+      error.name === "AbortError"
+    ) {
       return res.status(504).json({
         message: "AI request timed out. Please try again.",
       });
     }
 
-    return res.status(error.status === 429 ? 429 : 502).json({
+    if (error.status === 429) {
+      return res.status(429).json({
+        message: "AI request limit reached. Please try again later.",
+      });
+    }
+
+    return res.status(502).json({
       message: "AI service is temporarily unavailable. Please try again.",
     });
   }
